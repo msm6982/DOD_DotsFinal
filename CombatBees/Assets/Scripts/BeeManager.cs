@@ -29,7 +29,9 @@ public class BeeManager : MonoBehaviour {
 	public int startBeeCount;
 
 	List<Bee> bees;
-	List<Bee>[] teamsOfBees;
+	//List<Bee>[] teamsOfBees;
+	List<Bee> blueBees;
+	List<Bee> yellowBees;
 	List<Bee> pooledBees;
 
 	int activeBatch = 0;
@@ -41,26 +43,31 @@ public class BeeManager : MonoBehaviour {
 	const int beesPerBatch=1023;
 	MaterialPropertyBlock matProps;
 
-	public static void SpawnBee(int team) {
-		Vector3 pos = Vector3.right * (-Field.size.x * .4f + Field.size.x * .8f * team);
-		instance._SpawnBee(pos,team);
+	public static void SpawnBee(bool teamBlue) {
+		
+		int team = (teamBlue) ? 1 : 0; // Might need to flip this
+        Vector3 pos = Vector3.right * (-Field.size.x * .4f + Field.size.x * .8f * team);
+		instance._SpawnBee(pos,teamBlue);
 	}
 
-	public static void SpawnBee(Vector3 pos,int team) {
-		instance._SpawnBee(pos,team);
+	public static void SpawnBee(Vector3 pos, bool teamBlue) {
+		instance._SpawnBee(pos, teamBlue);
 	}
-	void _SpawnBee(Vector3 pos, int team) {
+	void _SpawnBee(Vector3 pos, bool teamBlue) {
 		Bee bee;
-		if (pooledBees.Count == 0) {
+        int team = (teamBlue) ? 1 : 0; // Might need to flip this
+        if (pooledBees.Count == 0) {
 			bee = new Bee();
 		} else {
 			bee = pooledBees[pooledBees.Count-1];
 			pooledBees.RemoveAt(pooledBees.Count - 1);
 		}
-		bee.Init(pos,team,Random.Range(minBeeSize,maxBeeSize));
+		bee.Init(pos,teamBlue,Random.Range(minBeeSize,maxBeeSize));
 		bee.velocity = Random.insideUnitSphere * maxSpawnSpeed;
 		bees.Add(bee);
-		teamsOfBees[team].Add(bee);
+		if (teamBlue) { blueBees.Add(bee.); }
+		else { yellowBees.Add(bee.position); }
+		//teamsOfBees[team].Add(bee)
 		if (beeMatrices[activeBatch].Count == beesPerBatch) {
 			activeBatch++;
 			if (beeMatrices.Count==activeBatch) {
@@ -74,7 +81,9 @@ public class BeeManager : MonoBehaviour {
 	void DeleteBee(Bee bee) {
 		pooledBees.Add(bee);
 		bees.Remove(bee);
-		teamsOfBees[bee.team].Remove(bee);
+		if (bee.isBlue) { blueBees.Remove(bee); } 
+		else { yellowBees.Remove(bee); }
+		//teamsOfBees[bee.isBlue].Remove(bee);
 		if (beeMatrices[activeBatch].Count == 0 && activeBatch>0) {
 			activeBatch--;
 		}
@@ -87,7 +96,9 @@ public class BeeManager : MonoBehaviour {
 	}
 	void Start () {
 		bees = new List<Bee>(50000);
-		teamsOfBees = new List<Bee>[2];
+		//teamsOfBees = new List<Bee>[2];
+		blueBees = new List<Bee>(25000);
+		yellowBees = new List<Bee>(25000);
 		pooledBees = new List<Bee>(50000);
 
 		beeMatrices = new List<List<Matrix4x4>>();
@@ -97,11 +108,13 @@ public class BeeManager : MonoBehaviour {
 
 		matProps = new MaterialPropertyBlock();
 
-		for (int i=0;i<2;i++) {
-			teamsOfBees[i] = new List<Bee>(25000);
-		}
+		//for (int i=0;i<2;i++) {
+		//	teamsOfBees[i] = new List<Bee>(25000);
+		//}
 		for (int i=0;i<startBeeCount;i++) {
-			int team = i%2;
+			// Previously 0-5
+			bool team = (0 == i%2);
+
 			SpawnBee(team);
 		}
 
@@ -120,16 +133,18 @@ public class BeeManager : MonoBehaviour {
 				bee.velocity += Random.insideUnitSphere * (flightJitter * deltaTime);
 				bee.velocity *= (1f-damping);
 
-				List<Bee> allies = teamsOfBees[bee.team];
-				Bee attractiveFriend = allies[Random.Range(0,allies.Count)];
-				Vector3 delta = attractiveFriend.position - bee.position;
+				List<Bee> allies = (bee.isBlue) ? blueBees : yellowBees;
+				// Attactive Friend
+				//Vector3 attractiveFriend = allies[Random.Range(0,allies.Count)];
+				Vector3 delta = allies[Random.Range(0, allies.Count)].position - bee.position;
 				float dist = Mathf.Sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
 				if (dist > 0f) {
 					bee.velocity += delta * (teamAttraction * deltaTime / dist);
 				}
 
-				Bee repellentFriend = allies[Random.Range(0,allies.Count)];
-				delta = attractiveFriend.position - bee.position;
+				// RepelantFriend
+				//Vector3 repellentFriend = allies[Random.Range(0,allies.Count)];
+				delta = allies[Random.Range(0, allies.Count)].position - bee.position;
 				dist = Mathf.Sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
 				if (dist > 0f) {
 					bee.velocity -= delta * (teamRepulsion * deltaTime / dist);
@@ -137,7 +152,7 @@ public class BeeManager : MonoBehaviour {
 
 				if (bee.enemyTarget == null && bee.resourceTarget == null) {
 					if (Random.value < aggression) {
-						List<Bee> enemyTeam = teamsOfBees[1 - bee.team];
+						List<Bee> enemyTeam = (bee.isBlue) ? yellowBees : blueBees;
 						if (enemyTeam.Count > 0) {
 							bee.enemyTarget = enemyTeam[Random.Range(0,enemyTeam.Count)];
 						}
@@ -145,7 +160,8 @@ public class BeeManager : MonoBehaviour {
 						bee.resourceTarget = ResourceManager.TryGetRandomResource();
 					}
 				} else if (bee.enemyTarget != null) {
-					if (bee.enemyTarget.dead) {
+					// Dead
+					if (bee.enemyTarget == null) {
 						bee.enemyTarget = null;
 					} else {
 						delta = bee.enemyTarget.position - bee.position;
@@ -180,7 +196,9 @@ public class BeeManager : MonoBehaviour {
 							}
 						}
 					} else if (resource.holder == bee) {
-						Vector3 targetPos = new Vector3(-Field.size.x * .45f + Field.size.x * .9f * bee.team,0f,bee.position.z);
+						int basePos = (bee.isBlue) ? 1 : 0;
+
+                        Vector3 targetPos = new Vector3(-Field.size.x * .45f + Field.size.x * .9f * basePos,0f,bee.position.z);
 						delta = targetPos - bee.position;
 						dist = Mathf.Sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
 						bee.velocity += (targetPos - bee.position) * (carryForce * deltaTime / dist);
@@ -190,9 +208,9 @@ public class BeeManager : MonoBehaviour {
 						} else {
 							bee.isHoldingResource = true;
 						}
-					} else if (resource.holder.team != bee.team) {
+					} else if (resource.holder.isBlue != bee.isBlue) {
 						bee.enemyTarget = resource.holder;
-					} else if (resource.holder.team == bee.team) {
+					} else if (resource.holder.isBlue == bee.isBlue) {
 						bee.resourceTarget = null;
 					}
 				}
@@ -257,7 +275,7 @@ public class BeeManager : MonoBehaviour {
 			if (bees[i].smoothDirection != Vector3.zero) {
 				rotation=Quaternion.LookRotation(bees[i].smoothDirection);
 			}
-			Color color= teamColors[bees[i].team];
+			Color color= (bees[i].isBlue) ? teamColors[1] : teamColors[0];
 			if (bees[i].dead) {
 				color *= .75f;
 				scale *= Mathf.Sqrt(bees[i].deathTimer);

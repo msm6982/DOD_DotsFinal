@@ -138,9 +138,9 @@ public class ResourceManager : MonoBehaviour {
 				if (resource.position.y < floorY) {
 					resource.position.y = floorY;
 					if (Mathf.Abs(resource.position.x) > Field.size.x * .4f) {
-						int team = 0;
+						bool team = false;
 						if (resource.position.x > 0f) {
-							team = 1;
+							team = true;
 						}
 						for (int j = 0; j < beesPerResource; j++) {
 							BeeManager.SpawnBee(resource.position,team);

@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
+// DOTS Final Changes
+// ChangedTeam int to bool teamBlue
 public class Bee {
 	public Vector3 position;
 	public Vector3 velocity;
 	public Vector3 smoothPosition;
 	public Vector3 smoothDirection;
-	public int team;
+	public bool isBlue;
 	public float size;
 	public Bee enemyTarget;
 	public Resource resourceTarget;
@@ -18,13 +22,13 @@ public class Bee {
 	public bool isHoldingResource;
 	public int index;
 
-	public void Init(Vector3 myPosition,int myTeam,float mySize) {
+	public void Init(Vector3 myPosition,bool blueTeam,float mySize) {
 		position = myPosition;
 		velocity = Vector3.zero;
 		smoothPosition = position+Vector3.right*.01f;
 		smoothDirection = Vector3.zero;
 		velocity = Vector3.zero;
-		team = myTeam;
+		isBlue = blueTeam;
 		size = mySize;
 
 		dead = false;
