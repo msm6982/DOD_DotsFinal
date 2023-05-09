@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst;
 using UnityEngine;
 
 public class ResourceManager : MonoBehaviour {
@@ -173,3 +174,4 @@ public class ResourceManager : MonoBehaviour {
 		Gizmos.DrawWireCube(Vector3.zero,Field.size);
 	}
 }
+

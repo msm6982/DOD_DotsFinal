@@ -13,7 +13,7 @@ public class Bee {
 	public Vector3 smoothDirection;
 	public bool isBlue;
 	public float size;
-	public Bee enemyTarget;
+	public int enemyTargetIndex;
 	public Resource resourceTarget;
 
 	public bool dead = false;
@@ -27,7 +27,7 @@ public class Bee {
 		velocity = Vector3.zero;
 		smoothPosition = position+Vector3.right*.01f;
 		smoothDirection = Vector3.zero;
-		velocity = Vector3.zero;
+		//velocity = Vector3.zero;
 		isBlue = blueTeam;
 		size = mySize;
 
@@ -37,7 +37,7 @@ public class Bee {
 		isHoldingResource = false;
 		index = -1;
 
-		enemyTarget = null;
+		enemyTargetIndex = -1;
 		resourceTarget = null;
 	}
 }

@@ -1,3 +1,4 @@
+/*
 using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
@@ -36,3 +37,4 @@ public struct MoveWithAllies : IJobParallelFor
 
     }
 }
+*/
