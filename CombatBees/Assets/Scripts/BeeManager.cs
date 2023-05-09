@@ -132,8 +132,8 @@ public class BeeManager : MonoBehaviour
         var group1Job = new BeeDeathJob { beeList = teamsOfBees[0], threashHold = removedIndex };
         var group2Job = new BeeDeathJob { beeList = teamsOfBees[1], threashHold = removedIndex };
 
-        JobHandle handleJob1 = group1Job.Schedule(teamsOfBees[0].Length, 50);;
-        JobHandle handleJob2 = group2Job.Schedule(teamsOfBees[1].Length, 50);
+        JobHandle handleJob1 = group1Job.Schedule(teamsOfBees[0].Length, 500);
+        JobHandle handleJob2 = group2Job.Schedule(teamsOfBees[1].Length, 500);
         var Joblist = new List<JobHandle>
         {
             handleJob1,
